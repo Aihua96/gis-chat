@@ -4,13 +4,26 @@
 
 ## 快速启动
 
-使用工作区随附 Python 运行：
+需要 Python 3.10+。GIS 解析、统计与 Web 服务全部使用标准库，只有 Word 导出依赖 `python-docx`：
 
 ```bash
-/Users/fah/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 app.py
+pip install -r requirements.txt
+python3 app.py
 ```
 
-浏览器打开 <http://127.0.0.1:8080>。
+浏览器打开 <http://127.0.0.1:8080>。未安装 `python-docx` 时应用仍可启动并完成导入与统计，仅报告导出不可用。
+
+## 目录结构
+
+```
+app.py                  HTTP 路由与请求校验
+src/config.py           演示项目元数据、路径与报告字体常量
+src/gis_service.py      Shapefile/GeoJSON 导入、确定性统计、SVG 示意图
+src/llm.py              叙述章节生成（OpenAI 兼容接口 + 受控模板回退）
+src/documents.py        上传资料文本提取与 Word 报告排版
+web/index.html          单页前端
+scripts/create_demo_shp.py  由演示 GeoJSON 生成示例 Shapefile ZIP
+```
 
 ## 演示范围
 
@@ -37,3 +50,12 @@
 模型只能接收项目描述、上传资料摘录和 GIS 引擎生成的结构化证据。提示词明确禁止模型自行生成面积、长度、坐标、精度等数据；这些数值始终由 GIS 计算模块提供。
 
 演示用 Shapefile ZIP 位于 `data/demo_engineering_survey_shp.zip`。SHP 是单一几何类型/图层格式，示例 ZIP 内含四组图层文件，用于模拟工程测量成果包。
+
+## 已知限制（生产化前需处理）
+
+- **面重叠检查为包络盒近似**，只能作为人工复核提示，不能替代严格拓扑验证；
+- **Shapefile 解析器为手写实现**，仅支持 Point / PolyLine / Polygon，对畸形文件容错有限，生产版建议改用 pyshp / fiona；
+- **面积长度按投影平面坐标计算**，输入若为经纬度坐标则结果无物理意义，导入前需确认坐标系；
+- **服务无鉴权且仅监听 127.0.0.1**，仅供本地演示；模型 Base URL 由前端传入并由服务端发起请求，若对外暴露需增加认证与出站地址白名单；
+- **项目信息硬编码在 `src/config.py`**，尚无多项目管理与持久化；
+- 报告正文字体默认 `Heiti SC`（macOS），其他系统需在 `src/config.py` 中改为本地已授权的中文字体。

@@ -1,6 +1,7 @@
 """Deterministic GIS import, evidence calculation and lightweight visual preview."""
 import base64, io, math, struct, zipfile
 from pathlib import Path
+from xml.sax.saxutils import escape
 
 def _dbf_records(raw):
     if not raw: return []
@@ -64,6 +65,7 @@ def _bbox(geometry):
     return (min(x[0] for x in points),min(x[1] for x in points),max(x[0] for x in points),max(x[1] for x in points)) if points else None
 
 def calculate_evidence(data, default_crs):
+    """确定性统计：要素数、分图层面积/长度，以及基础质检预警。数值口径见报告“数据来源与处理口径”。"""
     layers,warnings,ids,polygons={},[],set(),[]; total_area=total_length=0.0
     for index,feature in enumerate(data.get('features',[]),1):
         props,geom=feature.get('properties') or {},feature.get('geometry') or {}; layer=props.get('layer') or '未分类图层'; item=layers.setdefault(layer,{'count':0,'area':0.0,'length':0.0}); item['count']+=1
@@ -79,7 +81,34 @@ def calculate_evidence(data, default_crs):
             size=sum(_length(x) for x in c); item['length']+=size; total_length+=size
         elif typ!='Point': warnings.append(f'第 {index} 个要素为当前版本未支持的几何类型：{typ}')
         if props.get('quality')=='待复核': warnings.append(f'{fid or "未编号要素"} 标记为待复核')
+    # 演示级 bbox 重叠检查：仅做预警，不能替代严格拓扑验证。
     for i,(id1,a) in enumerate(polygons):
         for id2,b in polygons[i+1:]:
             if a and b and max(a[0],b[0])<min(a[2],b[2]) and max(a[1],b[1])<min(a[3],b[3]): warnings.append(f'面要素包络可能重叠：{id1} / {id2}（需人工复核）')
     return {'feature_count':len(data.get('features',[])),'layers':layers,'total_area':total_area,'total_length':total_length,'warnings':warnings,'crs':(data.get('crs') or {}).get('properties',{}).get('name') or default_crs}
+
+LAYER_COLORS = {'项目范围':'#2e73b8','道路中心线':'#e76f51','控制点':'#264653','绿化边界':'#65a30d'}
+
+def render_preview(data):
+    """把矢量成果渲染为 SVG 示意图。属性值来自上传文件，一律转义后再写入标记。"""
+    extent=_bbox({'coordinates':[f.get('geometry',{}).get('coordinates',[]) for f in data.get('features',[])]})
+    if not extent: return '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="430"></svg>'
+    x0,y0,x1,y1=extent; dx,dy=max(x1-x0,1),max(y1-y0,1)
+    def project(pt): return ((pt[0]-x0)/dx*700+50, 380-(pt[1]-y0)/dy*320)
+    def path(points): return ' '.join(f'{a:.1f},{b:.1f}' for a,b in map(project,points))
+    shape=['<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 430"><rect width="800" height="430" fill="#f6f8fb"/>'
+           '<text x="50" y="32" font-family="Arial" font-size="16" fill="#0f2747">测区成果示意图（自动生成）</text>']
+    for feature in data.get('features',[]):
+        geom,props=feature.get('geometry') or {},feature.get('properties') or {}
+        color=LAYER_COLORS.get(props.get('layer'),'#64748b'); typ,c=geom.get('type'),geom.get('coordinates',[])
+        if typ=='Polygon' and c:
+            shape.append(f'<polygon points="{path(c[0])}" fill="{color}" fill-opacity=".12" stroke="{color}" stroke-width="2"/>')
+        elif typ=='LineString':
+            shape.append(f'<polyline points="{path(c)}" fill="none" stroke="{color}" stroke-width="5" stroke-linecap="round"/>')
+        elif typ=='MultiLineString':
+            for part in c: shape.append(f'<polyline points="{path(part)}" fill="none" stroke="{color}" stroke-width="5" stroke-linecap="round"/>')
+        elif typ=='Point' and c:
+            a,b=project(c); label=escape(str(props.get('id','')))
+            shape.append(f'<circle cx="{a:.1f}" cy="{b:.1f}" r="6" fill="{color}"/><text x="{a+8:.1f}" y="{b-8:.1f}" font-family="Arial" font-size="11" fill="#243b53">{label}</text>')
+    shape.append('<text x="50" y="410" font-family="Arial" font-size="11" fill="#52616b">蓝：测区边界　红：道路中心线　绿：绿化边界　深色点：控制点</text></svg>')
+    return ''.join(shape)
