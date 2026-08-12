@@ -1,0 +1,14 @@
+{
+  "type": "FeatureCollection",
+  "name": "新城产业园西侧配套道路竣工测量_演示数据",
+  "crs": {"type": "name", "properties": {"name": "CGCS2000 / 3-degree Gauss-Kruger zone 37"}},
+  "features": [
+    {"type":"Feature","properties":{"layer":"项目范围","id":"AREA-001","name":"项目测区","quality":"合格"},"geometry":{"type":"Polygon","coordinates":[[[403520,3391260],[404020,3391260],[404020,3391560],[403520,3391560],[403520,3391260]]]}},
+    {"type":"Feature","properties":{"layer":"道路中心线","id":"RD-001","name":"园区西路","quality":"合格"},"geometry":{"type":"LineString","coordinates":[[403570,3391305],[403700,3391380],[403820,3391430],[403970,3391515]]}},
+    {"type":"Feature","properties":{"layer":"道路中心线","id":"RD-002","name":"支路一","quality":"合格"},"geometry":{"type":"LineString","coordinates":[[403690,3391375],[403690,3391510]]}},
+    {"type":"Feature","properties":{"layer":"控制点","id":"K001","name":"一级导线点 K001","elevation":356.821,"quality":"合格"},"geometry":{"type":"Point","coordinates":[403565,3391300]}},
+    {"type":"Feature","properties":{"layer":"控制点","id":"K002","name":"一级导线点 K002","elevation":357.104,"quality":"合格"},"geometry":{"type":"Point","coordinates":[403975,3391518]}},
+    {"type":"Feature","properties":{"layer":"控制点","id":"K003","name":"一级导线点 K003","elevation":356.938,"quality":"待复核"},"geometry":{"type":"Point","coordinates":[403690,3391510]}},
+    {"type":"Feature","properties":{"layer":"绿化边界","id":"GR-001","name":"西侧绿化带","quality":"合格"},"geometry":{"type":"Polygon","coordinates":[[[403545,3391320],[403625,3391365],[403610,3391405],[403530,3391360],[403545,3391320]]]}}
+  ]
+}
