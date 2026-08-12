@@ -17,7 +17,7 @@ CONTENT_TYPES = {'.html': 'text/html; charset=utf-8', '.css': 'text/css; charset
                  '.js': 'application/javascript; charset=utf-8', '.svg': 'image/svg+xml',
                  '.geojson': 'application/geo+json', '.zip': 'application/zip',
                  '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'}
-STATIC_FILES = ('index.html', 'styles.css', 'app.js')
+STATIC_SUFFIXES = ('.html', '.css', '.js', '.svg', '.png', '.ico')
 REPORT_FILENAME = re.compile(r'^[^/\\]+\.docx$')
 
 @dataclass
@@ -59,7 +59,7 @@ class Api:
             ('GET', r'/api/demo\.geojson', self.demo_geojson),
             ('GET', r'/api/demo-shp\.zip', self.demo_shapefile),
             ('GET', r'/output/(?P<filename>.+)', self.download_report),
-            ('GET', r'/(?P<name>index\.html|styles\.css|app\.js|)', self.static_file),
+            ('GET', r'/(?P<name>[\w./-]*)', self.static_file),
         ]
         self.compiled = [(method, re.compile(f'^{pattern}$'), handler) for method, pattern, handler in self.routes]
 
@@ -163,10 +163,13 @@ class Api:
         return file_response(self.output_dir / name)
 
     def static_file(self, params, _body):
+        """提供 web/ 下的前端资源：限定后缀，并确保解析后的路径仍在 web/ 目录内。"""
         name = params['name'] or 'index.html'
-        if name not in STATIC_FILES:
+        target = (self.web_dir / name).resolve()
+        root = self.web_dir.resolve()
+        if not target.is_relative_to(root) or target.suffix.lower() not in STATIC_SUFFIXES:
             return json_response({'error': '未找到资源'}, 404)
-        return file_response(self.web_dir / name)
+        return file_response(target)
 
 def make_handler(api: Api, max_body: int):
     class Handler(BaseHTTPRequestHandler):

@@ -43,6 +43,19 @@ app.py            装配入口（composition root）：在这里注入具体实�
           └ src/domain 领域模型与错误类型：纯数据结构，无任何 IO
 ```
 
+前端为原生 ES 模块，无构建步骤，同样按职责分层：
+
+```
+web/index.html          页面骨架，只引样式与入口脚本
+web/styles/             tokens 设计令牌 → base 基础排版 → components 组件样式
+web/js/core/            api 接口封装 / dom 模板工具 / router 路由 / store 共享状态
+web/js/components/      toast 提示 / fileInput 文件选择 / evidencePanel 统计展示
+web/js/views/           projectsView 项目列表 / workbenchView 工作台
+web/js/main.js          入口：加载元信息、注册路由、错误边界
+```
+
+视图只调用 `core/api.js` 暴露的方法，不出现裸 URL；所有插值经 `core/dom.js` 的 ``html`` `` 标签模板自动转义。
+
 替换点（都不需要改动其他层）：
 
 | 想替换的东西 | 改哪里 |

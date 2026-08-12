@@ -1,0 +1,40 @@
+/* 基础重置与页面骨架 */
+* { box-sizing: border-box }
+
+body {
+  margin: 0;
+  background: var(--c-bg);
+  color: var(--c-text);
+  font: var(--f-md)/1.6 var(--font-sans);
+}
+
+a { color: var(--c-brand); text-decoration: none }
+a:hover { text-decoration: underline }
+:focus-visible { outline: 2px solid var(--c-brand); outline-offset: 2px }
+
+h1, h2, h3 { margin: 0; font-weight: 650 }
+p { margin: 0 }
+
+.app-header {
+  background: linear-gradient(120deg, #082f5b, #135d96);
+  color: #fff;
+  padding: var(--s-4) max(5vw, var(--s-5));
+}
+.app-header .inner {
+  max-width: 940px; margin: 0 auto;
+  display: flex; align-items: baseline; gap: var(--s-3); flex-wrap: wrap;
+}
+.app-header .brand { color: #fff; font-size: var(--f-xl); font-weight: 700 }
+.app-header .brand:hover { text-decoration: none }
+.app-header .tagline { opacity: .85; font-size: var(--f-sm) }
+
+.page { max-width: 940px; margin: var(--s-5) auto; padding: 0 var(--s-5) var(--s-6) }
+
+.page-head { margin-bottom: var(--s-4) }
+.page-head h1 { font-size: var(--f-xl) }
+.page-head .sub { color: var(--c-text-soft); font-size: var(--f-sm); margin-top: var(--s-1) }
+
+.muted { color: var(--c-text-soft) }
+.faint { color: var(--c-text-faint) }
+.error-text { color: var(--c-danger) }
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums }
